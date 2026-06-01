@@ -30,7 +30,7 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         button, input, textarea, select, .todo-item, .stat-card, .preset-btn, .filter-tag, .deadline-quick-btn, .deadline-confirm-btn, .deadline-clear-btn, .settings-btn, .add-btn, .edit-btn, .delete-btn, .action-icon-btn, .todo-checkbox, .drag-handle, .slider-input, .form-select {
-            -webkit-app-region: no-drag;
+            cursor: default;
         }
 
         body {
@@ -60,8 +60,8 @@
 
         .app-container { position: relative; z-index: 1; max-width: 480px; margin: 0 auto; padding: 40px 20px; }
 
-        .app-header { text-align: center; margin-bottom: 40px; animation: slideDown 0.8s ease-out; -webkit-app-region: drag; }
-        .app-header * { -webkit-app-region: drag; }
+        .app-header { text-align: center; margin-bottom: 40px; animation: slideDown 0.8s ease-out; cursor: grab; user-select: none; }
+        .app-header:active { cursor: grabbing; }
         @keyframes slideDown { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
 
         .app-logo {
@@ -372,7 +372,7 @@
 </head>
 <body>
     <div class="app-container">
-        <header class="app-header" data-tauri-drag-region>
+        <header class="app-header" id="appHeader">
             <div class="app-logo"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div>
             <h1 class="app-title">TodoList Widget</h1>
             <p class="app-subtitle">透明待办事项 · 桌面插件</p>
@@ -570,6 +570,7 @@
                 this.filterTag = document.getElementById('filterTag');
                 this.statCards = document.querySelectorAll('.stat-card');
                 this.autostartToggle = document.getElementById('autostartToggle');
+                this.appHeader = document.getElementById('appHeader');
             }
 
             bindEvents() {
@@ -605,6 +606,7 @@
                 });
 
                 this.autostartToggle.addEventListener('change', () => this.toggleAutostart());
+                this.appHeader.addEventListener('mousedown', () => this.startDragging());
             }
 
             async toggleAutostart() {
@@ -616,6 +618,15 @@
                 } catch (e) {
                     this.autostartToggle.checked = !enabled;
                     console.warn('Autostart toggle failed (may not be in Tauri env):', e);
+                }
+            }
+
+            async startDragging() {
+                try {
+                    const { invoke } = window.__TAURI__.core;
+                    await invoke('start_dragging');
+                } catch (e) {
+                    console.warn('Start dragging failed (may not be in Tauri env):', e);
                 }
             }
 

@@ -7,8 +7,7 @@
     "frontendDist": "../src"
   },
   "app": {
-      "macOSPrivateApi": true,
-      "windows": [
+    "windows": [
       {
         "label": "main",
         "title": "TodoList Widget",

@@ -53,6 +53,11 @@ fn toggle_autostart(app: tauri::AppHandle, enabled: bool) -> Result<String, Stri
     Ok(format!("Autostart {}", if enabled { "enabled" } else { "disabled" }))
 }
 
+#[tauri::command]
+fn start_dragging(window: tauri::Window) -> Result<(), String> {
+    window.start_dragging().map_err(|e| e.to_string())
+}
+
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
@@ -121,7 +126,7 @@ fn main() {
 
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![toggle_autostart])
+        .invoke_handler(tauri::generate_handler![toggle_autostart, start_dragging])
         .on_window_event(|window, event| match event {
             tauri::WindowEvent::CloseRequested { api, .. } => {
                 api.prevent_close();
