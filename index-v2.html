@@ -3,15 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TodoList Widget - 重新设计</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <title>TodoList Widget</title>
     <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&family=Nunito:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --primary: #6C63FF;
             --primary-light: #8B85FF;
-            --primary-dark: #5548E8;
             --accent: #FF6B8A;
             --success: #4ECB71;
             --warning: #FFB74D;
@@ -24,7 +21,6 @@
             --text-muted: rgba(255, 255, 255, 0.5);
             --glass-bg: rgba(255, 255, 255, 0.08);
             --glass-border: rgba(255, 255, 255, 0.15);
-            --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
             --radius-sm: 8px;
             --radius-md: 12px;
             --radius-lg: 20px;
@@ -32,31 +28,22 @@
             --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: 'Nunito', 'PingFang SC', 'Microsoft YaHei', sans-serif;
             background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-medium) 50%, var(--bg-light) 100%);
             min-height: 100vh;
-            overflow-x: hidden;
             position: relative;
         }
 
         body::before {
             content: '';
             position: fixed;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: 
-                radial-gradient(circle at 20% 30%, rgba(108, 99, 255, 0.15) 0%, transparent 50%),
-                radial-gradient(circle at 80% 70%, rgba(255, 107, 138, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 50% 50%, rgba(78, 203, 113, 0.08) 0%, transparent 50%);
+            inset: -50%;
+            width: 200%; height: 200%;
+            background: radial-gradient(circle at 20% 30%, rgba(108, 99, 255, 0.15) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 70%, rgba(255, 107, 138, 0.1) 0%, transparent 50%);
             animation: bgFloat 20s ease-in-out infinite;
             pointer-events: none;
             z-index: 0;
@@ -68,1233 +55,325 @@
             66% { transform: translate(-20px, 20px) rotate(-1deg); }
         }
 
-        .app-container {
-            position: relative;
-            z-index: 1;
-            max-width: 480px;
-            margin: 0 auto;
-            padding: 40px 20px;
-            min-height: 100vh;
-        }
+        .app-container { position: relative; z-index: 1; max-width: 480px; margin: 0 auto; padding: 40px 20px; }
 
-        .app-header {
-            text-align: center;
-            margin-bottom: 40px;
-            animation: slideDown 0.8s ease-out;
-        }
-
-        @keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateY(-30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
+        .app-header { text-align: center; margin-bottom: 40px; animation: slideDown 0.8s ease-out; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
 
         .app-logo {
-            width: 80px;
-            height: 80px;
+            width: 80px; height: 80px;
             background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
             border-radius: var(--radius-xl);
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            display: flex; align-items: center; justify-content: center;
             margin: 0 auto 20px;
             box-shadow: 0 10px 40px rgba(108, 99, 255, 0.4);
-            position: relative;
-            overflow: hidden;
+            position: relative; overflow: hidden;
         }
-
         .app-logo::after {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
+            content: ''; position: absolute; inset: -50%; width: 200%; height: 200%;
             background: linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.2) 50%, transparent 60%);
             animation: logoShine 3s ease-in-out infinite;
         }
+        @keyframes logoShine { 0% { transform: translateX(-100%) rotate(45deg); } 100% { transform: translateX(100%) rotate(45deg); } }
+        .app-logo svg { width: 40px; height: 40px; fill: white; position: relative; z-index: 1; }
 
-        @keyframes logoShine {
-            0% { transform: translateX(-100%) rotate(45deg); }
-            100% { transform: translateX(100%) rotate(45deg); }
-        }
-
-        .app-logo svg {
-            width: 40px;
-            height: 40px;
-            fill: white;
-            position: relative;
-            z-index: 1;
-        }
-
-        .app-title {
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--text-primary);
-            margin-bottom: 8px;
-            letter-spacing: -0.5px;
-        }
-
-        .app-subtitle {
-            font-size: 0.95rem;
-            color: var(--text-secondary);
-            font-weight: 400;
-        }
+        .app-title { font-size: 2rem; font-weight: 700; color: var(--text-primary); margin-bottom: 8px; }
+        .app-subtitle { font-size: 0.95rem; color: var(--text-secondary); }
 
         .widget-card {
-            background: var(--glass-bg);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border);
-            border-radius: var(--radius-lg);
-            padding: 24px;
-            margin-bottom: 24px;
-            box-shadow: var(--glass-shadow);
-            transition: var(--transition);
-            animation: slideUp 0.8s ease-out;
-            animation-fill-mode: both;
+            background: var(--glass-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border); border-radius: var(--radius-lg); padding: 24px;
+            margin-bottom: 24px; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: var(--transition); animation: slideUp 0.8s ease-out; animation-fill-mode: both;
         }
-
         .widget-card:nth-child(2) { animation-delay: 0.1s; }
         .widget-card:nth-child(3) { animation-delay: 0.2s; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
 
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .widget-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
-            border-color: rgba(255, 255, 255, 0.25);
-        }
-
-        .card-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 20px;
-        }
-
-        .card-title {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: var(--text-primary);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .card-title-icon {
-            width: 32px;
-            height: 32px;
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
-            border-radius: var(--radius-sm);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .card-title-icon svg {
-            width: 18px;
-            height: 18px;
-            fill: white;
-        }
+        .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+        .card-title { font-size: 1.1rem; font-weight: 600; color: var(--text-primary); display: flex; align-items: center; gap: 10px; }
+        .card-title-icon { width: 32px; height: 32px; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; }
+        .card-title-icon svg { width: 18px; height: 18px; fill: white; }
 
         .settings-btn {
-            width: 36px;
-            height: 36px;
-            border-radius: var(--radius-sm);
-            background: rgba(255, 255, 255, 0.1);
-            border: none;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: var(--transition);
-            position: relative;
+            width: 36px; height: 36px; border-radius: var(--radius-sm);
+            background: rgba(255, 255, 255, 0.1); border: none; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; transition: var(--transition);
         }
+        .settings-btn:hover { background: rgba(255, 255, 255, 0.2); transform: rotate(90deg); }
+        .settings-btn svg { width: 20px; height: 20px; fill: var(--text-secondary); }
 
-        .settings-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: rotate(90deg);
-        }
-
-        .settings-btn svg {
-            width: 20px;
-            height: 20px;
-            fill: var(--text-secondary);
-        }
-
-        .todo-input-container {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 20px;
-            position: relative;
-        }
-
+        .todo-input-container { display: flex; gap: 12px; margin-bottom: 20px; }
         .todo-input {
-            flex: 1;
-            padding: 14px 18px;
-            background: rgba(255, 255, 255, 0.08);
-            border: 2px solid rgba(255, 255, 255, 0.1);
-            border-radius: var(--radius-md);
-            color: var(--text-primary);
-            font-size: 0.95rem;
-            font-family: inherit;
-            outline: none;
-            transition: var(--transition);
+            flex: 1; padding: 14px 18px;
+            background: rgba(255, 255, 255, 0.08); border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-md); color: var(--text-primary); font-size: 0.95rem; font-family: inherit;
+            outline: none; transition: var(--transition);
         }
-
-        .todo-input::placeholder {
-            color: var(--text-muted);
-        }
-
-        .todo-input:focus {
-            border-color: var(--primary);
-            background: rgba(255, 255, 255, 0.12);
-        }
+        .todo-input::placeholder { color: var(--text-muted); }
+        .todo-input:focus { border-color: var(--primary); background: rgba(255, 255, 255, 0.12); }
 
         .add-btn {
-            padding: 14px 24px;
-            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
-            border: none;
-            border-radius: var(--radius-md);
-            color: white;
-            font-size: 0.95rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: var(--transition);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            white-space: nowrap;
+            padding: 14px 24px; background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            border: none; border-radius: var(--radius-md); color: white; font-size: 0.95rem; font-weight: 600;
+            cursor: pointer; transition: var(--transition); display: flex; align-items: center; gap: 8px; white-space: nowrap;
         }
+        .add-btn:hover { transform: scale(1.05); box-shadow: 0 6px 20px rgba(108, 99, 255, 0.4); }
+        .add-btn:active { transform: scale(0.98); }
+        .add-btn svg { width: 18px; height: 18px; fill: white; }
 
-        .add-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 6px 20px rgba(108, 99, 255, 0.4);
+        .sort-info {
+            font-size: 0.75rem; color: var(--text-muted); margin-bottom: 12px;
+            display: flex; align-items: center; gap: 6px;
         }
-
-        .add-btn:active {
-            transform: scale(0.98);
-        }
-
-        .add-btn svg {
-            width: 18px;
-            height: 18px;
-            fill: white;
-        }
-
-        .filter-bar {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 16px;
-            padding: 8px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: var(--radius-md);
-        }
-
-        .filter-btn {
-            flex: 1;
-            padding: 10px;
-            background: transparent;
-            border: 1px solid transparent;
-            border-radius: var(--radius-sm);
-            color: var(--text-secondary);
-            font-size: 0.85rem;
-            cursor: pointer;
-            transition: var(--transition);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-        }
-
-        .filter-btn:hover {
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        .filter-btn.active {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
-            color: white;
-            border-color: transparent;
-        }
-
-        .filter-btn .count {
-            font-weight: 700;
-            min-width: 20px;
-            height: 20px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.75rem;
-        }
-
-        .filter-btn.active .count {
-            background: rgba(255, 255, 255, 0.3);
-        }
+        .sort-info svg { width: 14px; height: 14px; fill: currentColor; }
 
         .todo-list {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            max-height: 400px;
-            overflow-y: auto;
-            padding-right: 4px;
+            display: flex; flex-direction: column; gap: 8px;
+            max-height: 500px; overflow-y: auto; padding-right: 4px;
         }
-
-        .todo-list::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .todo-list::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 3px;
-        }
-
-        .todo-list::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 3px;
-        }
-
-        .todo-list::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.3);
-        }
+        .todo-list::-webkit-scrollbar { width: 6px; }
+        .todo-list::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); border-radius: 3px; }
+        .todo-list::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 3px; }
 
         .todo-item {
-            position: relative;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 16px;
-            background: rgba(255, 255, 255, 0.06);
-            border-radius: var(--radius-md);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            transition: var(--transition);
-            animation: todoSlideIn 0.4s ease-out;
-            cursor: grab;
+            position: relative; display: flex; align-items: flex-start; gap: 10px;
+            padding: 12px 14px; background: rgba(255, 255, 255, 0.06);
+            border-radius: var(--radius-md); border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.3s ease; cursor: grab; overflow: hidden;
         }
+        .todo-item:hover { background: rgba(255, 255, 255, 0.12); border-color: rgba(255, 255, 255, 0.2); }
+        .todo-item.dragging { opacity: 0.5; transform: scale(1.02); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3); cursor: grabbing; }
+        .todo-item.drag-over { border-color: var(--primary); background: rgba(108, 99, 255, 0.15); }
+        .todo-item.completed { opacity: 0.6; }
+        .todo-item.completed .todo-text { text-decoration: line-through; color: var(--text-muted); }
 
-        @keyframes todoSlideIn {
-            from {
-                opacity: 0;
-                transform: translateX(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-
-        .todo-item:hover {
-            background: rgba(255, 255, 255, 0.12);
-            border-color: rgba(255, 255, 255, 0.2);
-            transform: translateX(4px);
-        }
-
-        .todo-item.completed {
-            opacity: 0.6;
-        }
-
-        .todo-item.completed .todo-text {
-            text-decoration: line-through;
-            color: var(--text-muted);
-        }
+        .drag-handle { display: flex; align-items: center; cursor: grab; opacity: 0; transition: var(--transition); flex-shrink: 0; margin-top: 2px; }
+        .todo-item:hover .drag-handle { opacity: 1; }
+        .drag-handle svg { width: 14px; height: 14px; fill: var(--text-muted); }
 
         .todo-checkbox {
-            width: 22px;
-            height: 22px;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-radius: 6px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: var(--transition);
-            flex-shrink: 0;
+            width: 20px; height: 20px; border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 5px; cursor: pointer; display: flex; align-items: center;
+            justify-content: center; transition: var(--transition); flex-shrink: 0; margin-top: 2px;
         }
+        .todo-checkbox:hover { border-color: var(--primary); }
+        .todo-checkbox.checked { background: linear-gradient(135deg, var(--success) 0%, #3DB862 100%); border-color: var(--success); }
+        .todo-checkbox.checked svg { width: 12px; height: 12px; fill: white; }
 
-        .todo-checkbox:hover {
-            border-color: var(--primary);
+        .todo-content { flex: 1; min-width: 0; }
+        .todo-text { color: var(--text-primary); font-size: 0.95rem; line-height: 1.4; word-break: break-word; }
+
+        .todo-details {
+            max-height: 0; overflow: hidden; opacity: 0;
+            transition: max-height 0.4s ease, opacity 0.3s ease, margin 0.3s ease;
         }
+        .todo-item:hover .todo-details { max-height: 200px; opacity: 1; margin-top: 8px; }
 
-        .todo-checkbox.checked {
-            background: linear-gradient(135deg, var(--success) 0%, #3DB862 100%);
-            border-color: var(--success);
-        }
+        .todo-description { color: var(--text-secondary); font-size: 0.8rem; line-height: 1.5; margin-bottom: 6px; }
+        .todo-meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .todo-time { font-size: 0.7rem; color: var(--text-muted); display: flex; align-items: center; gap: 4px; }
+        .todo-time svg { width: 12px; height: 12px; fill: currentColor; }
+        .todo-priority { padding: 2px 8px; border-radius: 10px; font-size: 0.65rem; font-weight: 600; text-transform: uppercase; }
+        .priority-high { background: rgba(255, 82, 82, 0.2); color: var(--danger); }
+        .priority-medium { background: rgba(255, 183, 77, 0.2); color: var(--warning); }
+        .priority-low { background: rgba(78, 203, 113, 0.2); color: var(--success); }
 
-        .todo-checkbox.checked svg {
-            width: 14px;
-            height: 14px;
-            fill: white;
-        }
-
-        .todo-content {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .todo-text {
-            color: var(--text-primary);
-            font-size: 0.95rem;
-            line-height: 1.4;
-            word-break: break-word;
-        }
-
-        .todo-description {
-            color: var(--text-secondary);
-            font-size: 0.8rem;
-            margin-top: 4px;
-            line-height: 1.4;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-
-        .todo-meta {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-top: 6px;
-            flex-wrap: wrap;
-        }
-
-        .todo-time {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .todo-time svg {
-            width: 12px;
-            height: 12px;
-            fill: currentColor;
-        }
-
-        .todo-priority {
-            padding: 2px 8px;
-            border-radius: 10px;
-            font-size: 0.7rem;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-
-        .priority-high {
-            background: rgba(255, 82, 82, 0.2);
-            color: var(--danger);
-        }
-
-        .priority-medium {
-            background: rgba(255, 183, 77, 0.2);
-            color: var(--warning);
-        }
-
-        .priority-low {
-            background: rgba(78, 203, 113, 0.2);
-            color: var(--success);
-        }
-
-        .todo-actions {
-            display: flex;
-            gap: 6px;
-            opacity: 0;
-            transition: var(--transition);
-        }
-
-        .todo-item:hover .todo-actions {
-            opacity: 1;
-        }
-
+        .todo-actions { display: flex; gap: 4px; opacity: 0; transition: var(--transition); flex-shrink: 0; }
+        .todo-item:hover .todo-actions { opacity: 1; }
         .action-icon-btn {
-            width: 28px;
-            height: 28px;
-            border-radius: var(--radius-sm);
-            background: transparent;
-            border: none;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: var(--transition);
+            width: 26px; height: 26px; border-radius: var(--radius-sm);
+            background: transparent; border: none; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; transition: var(--transition);
         }
+        .action-icon-btn:hover { background: rgba(255, 255, 255, 0.2); }
+        .action-icon-btn.edit:hover { background: rgba(108, 99, 255, 0.2); }
+        .action-icon-btn.delete:hover { background: rgba(255, 82, 82, 0.2); }
+        .action-icon-btn svg { width: 14px; height: 14px; fill: var(--text-secondary); }
+        .action-icon-btn.edit svg { fill: var(--primary); }
+        .action-icon-btn.delete svg { fill: var(--danger); }
 
-        .action-icon-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
+        .priority-indicator {
+            width: 4px; min-height: 100%; position: absolute; left: 0; top: 0;
+            border-radius: 4px 0 0 4px;
         }
+        .priority-indicator.high { background: var(--danger); }
+        .priority-indicator.medium { background: var(--warning); }
+        .priority-indicator.low { background: var(--success); }
 
-        .action-icon-btn.edit:hover {
-            background: rgba(108, 99, 255, 0.2);
-        }
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+        .stat-card { text-align: center; padding: 20px 12px; background: rgba(255, 255, 255, 0.06); border-radius: var(--radius-md); transition: var(--transition); }
+        .stat-card:hover { background: rgba(255, 255, 255, 0.12); transform: translateY(-2px); }
+        .stat-value { font-size: 2rem; font-weight: 700; color: var(--primary); font-family: 'Caveat', cursive; line-height: 1; margin-bottom: 8px; }
+        .stat-label { font-size: 0.8rem; color: var(--text-secondary); }
 
-        .action-icon-btn.delete:hover {
-            background: rgba(255, 82, 82, 0.2);
-        }
+        .empty-state { text-align: center; padding: 40px 20px; color: var(--text-muted); }
+        .empty-state svg { width: 64px; height: 64px; fill: rgba(255, 255, 255, 0.2); margin-bottom: 16px; }
+        .empty-state-title { font-size: 1.1rem; color: var(--text-secondary); margin-bottom: 8px; }
+        .empty-state-text { font-size: 0.9rem; line-height: 1.6; }
 
-        .action-icon-btn svg {
-            width: 14px;
-            height: 14px;
-            fill: var(--text-secondary);
-        }
-
-        .action-icon-btn.edit svg {
-            fill: var(--primary);
-        }
-
-        .action-icon-btn.delete svg {
-            fill: var(--danger);
-        }
-
-        /* 详情浮层 */
-        .todo-tooltip {
-            position: absolute;
-            top: calc(100% + 8px);
-            left: 0;
-            right: 0;
-            background: rgba(20, 20, 40, 0.95);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border);
-            border-radius: var(--radius-md);
-            padding: 16px;
-            z-index: 100;
-            opacity: 0;
-            visibility: hidden;
-            transform: translateY(-10px);
-            transition: var(--transition);
-            pointer-events: none;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-        }
-
-        .todo-item:hover .todo-tooltip {
-            opacity: 1;
-            visibility: visible;
-            transform: translateY(0);
-        }
-
-        .tooltip-title {
-            font-size: 1rem;
-            font-weight: 600;
-            color: var(--text-primary);
-            margin-bottom: 8px;
-        }
-
-        .tooltip-description {
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-            line-height: 1.5;
-            margin-bottom: 12px;
-        }
-
-        .tooltip-meta {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-
-        .tooltip-meta-item {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 0.75rem;
-            color: var(--text-muted);
-        }
-
-        .tooltip-meta-item svg {
-            width: 12px;
-            height: 12px;
-            fill: currentColor;
-        }
-
-        /* 设置面板 */
-        .settings-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 1000;
-            opacity: 0;
-            visibility: hidden;
-            transition: var(--transition);
-        }
-
-        .settings-overlay.active {
-            opacity: 1;
-            visibility: visible;
-        }
-
+        .settings-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5); z-index: 1000; opacity: 0; visibility: hidden; transition: var(--transition); }
+        .settings-overlay.active { opacity: 1; visibility: visible; }
         .settings-panel {
-            position: fixed;
-            top: 0;
-            right: 0;
-            bottom: 0;
-            width: 320px;
+            position: fixed; top: 0; right: 0; bottom: 0; width: 320px;
             background: linear-gradient(180deg, var(--bg-dark) 0%, var(--bg-medium) 100%);
-            border-left: 1px solid var(--glass-border);
-            padding: 24px;
-            z-index: 1001;
-            transform: translateX(100%);
-            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            overflow-y: auto;
+            border-left: 1px solid var(--glass-border); padding: 24px; z-index: 1001;
+            transform: translateX(100%); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); overflow-y: auto;
         }
+        .settings-panel.active { transform: translateX(0); }
+        .settings-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 30px; padding-bottom: 16px; border-bottom: 1px solid var(--glass-border); }
+        .settings-title { font-size: 1.2rem; font-weight: 600; color: var(--text-primary); display: flex; align-items: center; gap: 10px; }
+        .settings-title svg { width: 24px; height: 24px; fill: var(--primary); }
+        .settings-close { width: 36px; height: 36px; border-radius: var(--radius-sm); background: rgba(255, 255, 255, 0.1); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: var(--transition); }
+        .settings-close:hover { background: rgba(255, 255, 255, 0.2); }
+        .settings-close svg { width: 18px; height: 18px; fill: var(--text-secondary); }
+        .settings-section { margin-bottom: 28px; }
+        .settings-section-title { font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 16px; }
+        .setting-item { background: rgba(255, 255, 255, 0.06); border-radius: var(--radius-md); padding: 16px; margin-bottom: 12px; }
+        .setting-label { font-size: 0.95rem; color: var(--text-primary); margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; }
+        .setting-value { font-weight: 700; color: var(--primary); font-family: 'Caveat', cursive; }
+        .slider-container { position: relative; height: 8px; background: rgba(255, 255, 255, 0.1); border-radius: 4px; overflow: hidden; }
+        .slider-fill { position: absolute; left: 0; top: 0; height: 100%; background: linear-gradient(90deg, var(--primary) 0%, var(--accent) 100%); border-radius: 4px; transition: width 0.1s ease; }
+        .slider-input { position: absolute; width: 100%; height: 100%; opacity: 0; cursor: pointer; margin: 0; }
+        .slider-thumb { position: absolute; width: 24px; height: 24px; background: white; border-radius: 50%; top: 50%; transform: translate(-50%, -50%); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3); pointer-events: none; }
+        .slider-thumb::after { content: ''; position: absolute; width: 12px; height: 12px; background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%); border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        .transparency-presets { display: flex; gap: 8px; margin-top: 12px; }
+        .preset-btn { flex: 1; padding: 8px; border: 1px solid var(--glass-border); background: rgba(255, 255, 255, 0.05); border-radius: var(--radius-sm); color: var(--text-secondary); font-size: 0.8rem; cursor: pointer; transition: var(--transition); }
+        .preset-btn:hover { background: rgba(255, 255, 255, 0.1); border-color: var(--primary); color: var(--text-primary); }
+        .preset-btn.active { background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%); border-color: transparent; color: white; }
 
-        .settings-panel.active {
-            transform: translateX(0);
-        }
-
-        .settings-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 30px;
-            padding-bottom: 16px;
-            border-bottom: 1px solid var(--glass-border);
-        }
-
-        .settings-title {
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: var(--text-primary);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .settings-title svg {
-            width: 24px;
-            height: 24px;
-            fill: var(--primary);
-        }
-
-        .settings-close {
-            width: 36px;
-            height: 36px;
-            border-radius: var(--radius-sm);
-            background: rgba(255, 255, 255, 0.1);
-            border: none;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: var(--transition);
-        }
-
-        .settings-close:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-
-        .settings-close svg {
-            width: 18px;
-            height: 18px;
-            fill: var(--text-secondary);
-        }
-
-        .settings-section {
-            margin-bottom: 28px;
-        }
-
-        .settings-section-title {
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 16px;
-        }
-
-        .setting-item {
-            background: rgba(255, 255, 255, 0.06);
-            border-radius: var(--radius-md);
-            padding: 16px;
-            margin-bottom: 12px;
-        }
-
-        .setting-label {
-            font-size: 0.95rem;
-            color: var(--text-primary);
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .setting-value {
-            font-weight: 700;
-            color: var(--primary);
-            font-family: 'Caveat', cursive;
-        }
-
-        .transparency-control {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .slider-container {
-            position: relative;
-            height: 8px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 4px;
-            overflow: hidden;
-        }
-
-        .slider-fill {
-            position: absolute;
-            left: 0;
-            top: 0;
-            height: 100%;
-            background: linear-gradient(90deg, var(--primary) 0%, var(--accent) 100%);
-            border-radius: 4px;
-            transition: width 0.1s ease;
-        }
-
-        .slider-input {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            opacity: 0;
-            cursor: pointer;
-            margin: 0;
-        }
-
-        .slider-thumb {
-            position: absolute;
-            width: 24px;
-            height: 24px;
-            background: white;
-            border-radius: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-            transition: transform 0.1s ease, box-shadow 0.2s ease;
-            pointer-events: none;
-        }
-
-        .slider-thumb::after {
-            content: '';
-            position: absolute;
-            width: 12px;
-            height: 12px;
-            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
-            border-radius: 50%;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-        }
-
-        .transparency-presets {
-            display: flex;
-            gap: 8px;
-        }
-
-        .preset-btn {
-            flex: 1;
-            padding: 8px;
-            border: 1px solid var(--glass-border);
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: var(--radius-sm);
-            color: var(--text-secondary);
-            font-size: 0.8rem;
-            cursor: pointer;
-            transition: var(--transition);
-        }
-
-        .preset-btn:hover {
-            background: rgba(255, 255, 255, 0.1);
-            border-color: var(--primary);
-            color: var(--text-primary);
-        }
-
-        .preset-btn.active {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
-            border-color: transparent;
-            color: white;
-        }
-
-        /* 编辑面板 */
-        .edit-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            visibility: hidden;
-            transition: var(--transition);
-        }
-
-        .edit-overlay.active {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .edit-panel {
-            width: 90%;
-            max-width: 420px;
-            background: linear-gradient(180deg, var(--bg-dark) 0%, var(--bg-medium) 100%);
-            border: 1px solid var(--glass-border);
-            border-radius: var(--radius-lg);
-            padding: 24px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-            transform: scale(0.9);
-            transition: transform 0.3s ease;
-        }
-
-        .edit-overlay.active .edit-panel {
-            transform: scale(1);
-        }
-
-        .edit-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 24px;
-        }
-
-        .edit-title {
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-
-        .edit-close {
-            width: 32px;
-            height: 32px;
-            border-radius: var(--radius-sm);
-            background: rgba(255, 255, 255, 0.1);
-            border: none;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: var(--transition);
-        }
-
-        .edit-close:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
-
-        .edit-close svg {
-            width: 16px;
-            height: 16px;
-            fill: var(--text-secondary);
-        }
-
-        .form-group {
-            margin-bottom: 18px;
-        }
-
-        .form-label {
-            display: block;
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-            margin-bottom: 8px;
-            font-weight: 500;
-        }
-
-        .form-input {
-            width: 100%;
-            padding: 12px 14px;
-            background: rgba(255, 255, 255, 0.08);
-            border: 2px solid rgba(255, 255, 255, 0.1);
-            border-radius: var(--radius-sm);
-            color: var(--text-primary);
-            font-size: 0.95rem;
-            font-family: inherit;
-            outline: none;
-            transition: var(--transition);
-        }
-
-        .form-input:focus {
-            border-color: var(--primary);
-            background: rgba(255, 255, 255, 0.12);
-        }
-
-        textarea.form-input {
-            resize: vertical;
-            min-height: 80px;
-        }
-
-        .form-select {
-            width: 100%;
-            padding: 12px 14px;
-            background: rgba(255, 255, 255, 0.08);
-            border: 2px solid rgba(255, 255, 255, 0.1);
-            border-radius: var(--radius-sm);
-            color: var(--text-primary);
-            font-size: 0.95rem;
-            font-family: inherit;
-            outline: none;
-            cursor: pointer;
-            transition: var(--transition);
-            -webkit-appearance: none;
-        }
-
-        .form-select:focus {
-            border-color: var(--primary);
-        }
-
-        .form-actions {
-            display: flex;
-            gap: 12px;
-            margin-top: 24px;
-        }
-
-        .btn {
-            flex: 1;
-            padding: 12px;
-            border: none;
-            border-radius: var(--radius-sm);
-            font-size: 0.95rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: var(--transition);
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            box-shadow: 0 6px 20px rgba(108, 99, 255, 0.4);
-            transform: translateY(-2px);
-        }
-
-        .btn-secondary {
-            background: rgba(255, 255, 255, 0.1);
-            color: var(--text-primary);
-        }
-
-        .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.15);
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-        }
-
-        .stat-card {
-            text-align: center;
-            padding: 20px 12px;
-            background: rgba(255, 255, 255, 0.06);
-            border-radius: var(--radius-md);
-            transition: var(--transition);
-            cursor: pointer;
-            border: 2px solid transparent;
-        }
-
-        .stat-card:hover {
-            background: rgba(255, 255, 255, 0.12);
-            transform: translateY(-2px);
-        }
-
-        .stat-card.active {
-            border-color: var(--primary);
-            background: rgba(108, 99, 255, 0.15);
-        }
-
-        .stat-value {
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--primary);
-            font-family: 'Caveat', cursive;
-            line-height: 1;
-            margin-bottom: 8px;
-        }
-
-        .stat-label {
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: var(--text-muted);
-        }
-
-        .empty-state svg {
-            width: 64px;
-            height: 64px;
-            fill: rgba(255, 255, 255, 0.2);
-            margin-bottom: 16px;
-        }
-
-        .empty-state-title {
-            font-size: 1.1rem;
-            color: var(--text-secondary);
-            margin-bottom: 8px;
-        }
-
-        .empty-state-text {
-            font-size: 0.9rem;
-            line-height: 1.6;
-        }
-
-        .footer {
-            text-align: center;
-            margin-top: 40px;
-            padding: 20px;
-            color: var(--text-muted);
-            font-size: 0.85rem;
-        }
+        .edit-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5); z-index: 1000; display: flex; align-items: center; justify-content: center; opacity: 0; visibility: hidden; transition: var(--transition); }
+        .edit-overlay.active { opacity: 1; visibility: visible; }
+        .edit-panel { width: 90%; max-width: 420px; background: linear-gradient(180deg, var(--bg-dark) 0%, var(--bg-medium) 100%); border: 1px solid var(--glass-border); border-radius: var(--radius-lg); padding: 24px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5); transform: scale(0.9); transition: transform 0.3s ease; }
+        .edit-overlay.active .edit-panel { transform: scale(1); }
+        .edit-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+        .edit-title { font-size: 1.2rem; font-weight: 600; color: var(--text-primary); }
+        .edit-close { width: 32px; height: 32px; border-radius: var(--radius-sm); background: rgba(255, 255, 255, 0.1); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: var(--transition); }
+        .edit-close:hover { background: rgba(255, 255, 255, 0.2); }
+        .edit-close svg { width: 16px; height: 16px; fill: var(--text-secondary); }
+        .form-group { margin-bottom: 18px; }
+        .form-label { display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 8px; font-weight: 500; }
+        .form-input { width: 100%; padding: 12px 14px; background: rgba(255, 255, 255, 0.08); border: 2px solid rgba(255, 255, 255, 0.1); border-radius: var(--radius-sm); color: var(--text-primary); font-size: 0.95rem; font-family: inherit; outline: none; transition: var(--transition); }
+        .form-input:focus { border-color: var(--primary); background: rgba(255, 255, 255, 0.12); }
+        textarea.form-input { resize: vertical; min-height: 80px; }
+        .form-select { width: 100%; padding: 12px 14px; background: rgba(255, 255, 255, 0.08); border: 2px solid rgba(255, 255, 255, 0.1); border-radius: var(--radius-sm); color: var(--text-primary); font-size: 0.95rem; font-family: inherit; outline: none; cursor: pointer; transition: var(--transition); -webkit-appearance: none; }
+        .form-select:focus { border-color: var(--primary); }
+        .form-actions { display: flex; gap: 12px; margin-top: 24px; }
+        .btn { flex: 1; padding: 12px; border: none; border-radius: var(--radius-sm); font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: var(--transition); }
+        .btn-primary { background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%); color: white; }
+        .btn-primary:hover { box-shadow: 0 6px 20px rgba(108, 99, 255, 0.4); transform: translateY(-2px); }
+        .btn-secondary { background: rgba(255, 255, 255, 0.1); color: var(--text-primary); }
+        .btn-secondary:hover { background: rgba(255, 255, 255, 0.15); }
 
         @media (max-width: 480px) {
-            .app-container {
-                padding: 30px 16px;
-            }
-
-            .app-title {
-                font-size: 1.6rem;
-            }
-
-            .widget-card {
-                padding: 20px;
-            }
-
-            .todo-input-container {
-                flex-direction: column;
-            }
-
-            .add-btn {
-                justify-content: center;
-            }
-
-            .settings-panel {
-                width: 100%;
-            }
+            .app-container { padding: 30px 16px; }
+            .app-title { font-size: 1.6rem; }
+            .widget-card { padding: 20px; }
+            .todo-input-container { flex-direction: column; }
+            .add-btn { justify-content: center; }
+            .settings-panel { width: 100%; }
         }
     </style>
 </head>
 <body>
     <div class="app-container">
         <header class="app-header">
-            <div class="app-logo">
-                <svg viewBox="0 0 24 24">
-                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-                </svg>
-            </div>
+            <div class="app-logo"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div>
             <h1 class="app-title">TodoList Widget</h1>
             <p class="app-subtitle">透明待办事项 · 桌面插件</p>
         </header>
 
-        <!-- 添加待办区域 -->
         <div class="widget-card">
             <div class="card-header">
                 <h2 class="card-title">
-                    <span class="card-title-icon">
-                        <svg viewBox="0 0 24 24">
-                            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
-                        </svg>
-                    </span>
+                    <span class="card-title-icon"><svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></span>
                     添加待办
                 </h2>
                 <button class="settings-btn" id="settingsBtn" title="设置">
-                    <svg viewBox="0 0 24 24">
-                        <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 00.12-.61l-1.92-3.32a.488.488 0 00-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 00-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 00-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
-                    </svg>
+                    <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 00.12-.61l-1.92-3.32a.488.488 0 00-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 00-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 00-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
                 </button>
             </div>
             <div class="todo-input-container">
                 <input type="text" class="todo-input" id="todoInput" placeholder="输入待办事项...">
                 <button class="add-btn" id="addBtn">
-                    <svg viewBox="0 0 24 24">
-                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-                    </svg>
+                    <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
                     添加
                 </button>
             </div>
-
-            <!-- 筛选栏 -->
-            <div class="filter-bar">
-                <button class="filter-btn active" data-filter="all">
-                    全部 <span class="count" id="filterAllCount">0</span>
-                </button>
-                <button class="filter-btn" data-filter="pending">
-                    待完成 <span class="count" id="filterPendingCount">0</span>
-                </button>
-                <button class="filter-btn" data-filter="completed">
-                    已完成 <span class="count" id="filterCompletedCount">0</span>
-                </button>
+            <div class="sort-info">
+                <svg viewBox="0 0 24 24"><path d="M3 18h6v-2H3v2zM3 6v2h18V6H3zm0 7h12v-2H3v2z"/></svg>
+                排序：优先级（高→低）> 创建时间（新→旧）· 拖拽可调整顺序
             </div>
-
-            <!-- 待办列表 -->
             <div class="todo-list" id="todoList">
                 <div class="empty-state" id="emptyState">
-                    <svg viewBox="0 0 24 24">
-                        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-                    </svg>
+                    <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
                     <h3 class="empty-state-title">暂无待办事项</h3>
                     <p class="empty-state-text">添加你的第一个待办事项开始吧！</p>
                 </div>
             </div>
         </div>
 
-        <!-- 统计信息 -->
         <div class="widget-card">
             <div class="card-header">
                 <h2 class="card-title">
-                    <span class="card-title-icon">
-                        <svg viewBox="0 0 24 24">
-                            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
-                        </svg>
-                    </span>
+                    <span class="card-title-icon"><svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg></span>
                     统计信息
                 </h2>
             </div>
             <div class="stats-grid">
-                <div class="stat-card" data-stat="all">
-                    <div class="stat-value" id="totalCount">0</div>
-                    <div class="stat-label">总计</div>
-                </div>
-                <div class="stat-card" data-stat="pending">
-                    <div class="stat-value" id="pendingCount">0</div>
-                    <div class="stat-label">待完成</div>
-                </div>
-                <div class="stat-card" data-stat="completed">
-                    <div class="stat-value" id="completedCount">0</div>
-                    <div class="stat-label">已完成</div>
-                </div>
+                <div class="stat-card"><div class="stat-value" id="totalCount">0</div><div class="stat-label">总计</div></div>
+                <div class="stat-card"><div class="stat-value" id="pendingCount">0</div><div class="stat-label">待完成</div></div>
+                <div class="stat-card"><div class="stat-value" id="completedCount">0</div><div class="stat-label">已完成</div></div>
             </div>
         </div>
     </div>
 
-    <!-- 设置面板 -->
     <div class="settings-overlay" id="settingsOverlay"></div>
     <div class="settings-panel" id="settingsPanel">
         <div class="settings-header">
-            <h2 class="settings-title">
-                <svg viewBox="0 0 24 24">
-                    <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 00.12-.61l-1.92-3.32a.488.488 0 00-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 00-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 00-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
-                </svg>
-                设置
-            </h2>
-            <button class="settings-close" id="settingsClose">
-                <svg viewBox="0 0 24 24">
-                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-                </svg>
-            </button>
+            <h2 class="settings-title"><svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 00.12-.61l-1.92-3.32a.488.488 0 00-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 00-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 00-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg> 设置</h2>
+            <button class="settings-close" id="settingsClose"><svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button>
         </div>
-
         <div class="settings-section">
             <h3 class="settings-section-title">外观</h3>
-            
             <div class="setting-item">
-                <div class="setting-label">
-                    透明度调节
-                    <span class="setting-value" id="opacityValue">85%</span>
+                <div class="setting-label">透明度调节 <span class="setting-value" id="opacityValue">85%</span></div>
+                <div class="slider-container">
+                    <div class="slider-fill" id="sliderFill"></div>
+                    <input type="range" class="slider-input" id="opacitySlider" min="20" max="100" value="85">
+                    <div class="slider-thumb" id="sliderThumb"></div>
                 </div>
-                <div class="transparency-control">
-                    <div class="slider-container" id="sliderContainer">
-                        <div class="slider-fill" id="sliderFill"></div>
-                        <input type="range" class="slider-input" id="opacitySlider" min="20" max="100" value="85">
-                        <div class="slider-thumb" id="sliderThumb"></div>
-                    </div>
-                    <div class="transparency-presets">
-                        <button class="preset-btn" data-opacity="30">30%</button>
-                        <button class="preset-btn" data-opacity="50">50%</button>
-                        <button class="preset-btn active" data-opacity="85">85%</button>
-                        <button class="preset-btn" data-opacity="100">100%</button>
-                    </div>
+                <div class="transparency-presets">
+                    <button class="preset-btn" data-opacity="30">30%</button>
+                    <button class="preset-btn" data-opacity="50">50%</button>
+                    <button class="preset-btn active" data-opacity="85">85%</button>
+                    <button class="preset-btn" data-opacity="100">100%</button>
                 </div>
             </div>
         </div>
-
-        <div class="settings-section">
-            <h3 class="settings-section-title">快捷键</h3>
-            
-            <div class="setting-item">
-                <div style="display: flex; flex-direction: column; gap: 10px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span style="color: var(--text-secondary); font-size: 0.85rem;">添加待办</span>
-                        <kbd style="background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px; color: var(--text-primary); font-size: 0.8rem;">Ctrl + N</kbd>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span style="color: var(--text-secondary); font-size: 0.85rem;">打开设置</span>
-                        <kbd style="background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px; color: var(--text-primary); font-size: 0.8rem;">Ctrl + ,</kbd>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span style="color: var(--text-secondary); font-size: 0.85rem;">筛选全部</span>
-                        <kbd style="background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px; color: var(--text-primary); font-size: 0.8rem;">Ctrl + 1</kbd>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span style="color: var(--text-secondary); font-size: 0.85rem;">筛选待完成</span>
-                        <kbd style="background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px; color: var(--text-primary); font-size: 0.8rem;">Ctrl + 2</kbd>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span style="color: var(--text-secondary); font-size: 0.85rem;">筛选已完成</span>
-                        <kbd style="background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px; color: var(--text-primary); font-size: 0.8rem;">Ctrl + 3</kbd>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <div class="settings-section">
             <h3 class="settings-section-title">关于</h3>
-            
             <div class="setting-item">
                 <div style="color: var(--text-secondary); font-size: 0.85rem; line-height: 1.6;">
                     <p style="margin-bottom: 8px;"><strong style="color: var(--text-primary);">TodoList Widget v1.0.0</strong></p>
-                    <p>透明待办事项桌面插件，支持卡片式管理、透明度调节、数据持久化等功能。</p>
+                    <p>透明待办事项桌面插件，支持卡片式管理、透明度调节、拖拽排序、数据持久化等功能。</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- 编辑面板 -->
     <div class="edit-overlay" id="editOverlay">
         <div class="edit-panel">
             <div class="edit-header">
                 <h2 class="edit-title" id="editPanelTitle">编辑待办事项</h2>
-                <button class="edit-close" id="editClose">
-                    <svg viewBox="0 0 24 24">
-                        <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-                    </svg>
-                </button>
+                <button class="edit-close" id="editClose"><svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></button>
             </div>
-            
-            <div class="form-group">
-                <label class="form-label">标题</label>
-                <input type="text" class="form-input" id="editTitle" placeholder="输入待办标题...">
+            <div class="form-group"><label class="form-label">标题</label><input type="text" class="form-input" id="editTitle" placeholder="输入待办标题..."></div>
+            <div class="form-group"><label class="form-label">详细描述</label><textarea class="form-input" id="editDescription" placeholder="输入详细描述..."></textarea></div>
+            <div class="form-group"><label class="form-label">优先级</label>
+                <select class="form-select" id="editPriority"><option value="low">低</option><option value="medium" selected>中</option><option value="high">高</option></select>
             </div>
-            
-            <div class="form-group">
-                <label class="form-label">详细描述</label>
-                <textarea class="form-input" id="editDescription" placeholder="输入详细描述..."></textarea>
-            </div>
-            
-            <div class="form-group">
-                <label class="form-label">优先级</label>
-                <select class="form-select" id="editPriority">
-                    <option value="low">低</option>
-                    <option value="medium">中</option>
-                    <option value="high">高</option>
-                </select>
-            </div>
-            
-            <div class="form-actions">
-                <button class="btn btn-secondary" id="editCancel">取消</button>
-                <button class="btn btn-primary" id="editSave">保存</button>
-            </div>
+            <div class="form-actions"><button class="btn btn-secondary" id="editCancel">取消</button><button class="btn btn-primary" id="editSave">保存</button></div>
         </div>
     </div>
 
@@ -1303,8 +382,8 @@
             constructor() {
                 this.todos = JSON.parse(localStorage.getItem('todos')) || [];
                 this.opacity = parseInt(localStorage.getItem('opacity')) || 85;
-                this.filter = 'all';
                 this.editingTodo = null;
+                this.draggedIndex = null;
                 this.init();
             }
 
@@ -1312,6 +391,7 @@
                 this.cacheElements();
                 this.bindEvents();
                 this.updateSlider();
+                this.sortTodos();
                 this.renderTodos();
                 this.updateStats();
                 this.applyOpacity();
@@ -1342,48 +422,34 @@
                 this.editTitle = document.getElementById('editTitle');
                 this.editDescription = document.getElementById('editDescription');
                 this.editPriority = document.getElementById('editPriority');
-                this.filterBtns = document.querySelectorAll('.filter-btn');
-                this.statCards = document.querySelectorAll('.stat-card');
             }
 
             bindEvents() {
                 this.opacitySlider.addEventListener('input', (e) => this.handleOpacityChange(e));
                 this.addBtn.addEventListener('click', () => this.addTodo());
-                this.todoInput.addEventListener('keypress', (e) => {
-                    if (e.key === 'Enter') this.addTodo();
-                });
-
+                this.todoInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') this.addTodo(); });
                 this.presetBtns.forEach(btn => {
                     btn.addEventListener('click', (e) => {
-                        const opacity = parseInt(e.target.dataset.opacity);
-                        this.opacitySlider.value = opacity;
+                        this.opacitySlider.value = parseInt(e.target.dataset.opacity);
                         this.handleOpacityChange({ target: this.opacitySlider });
                     });
                 });
-
                 this.settingsBtn.addEventListener('click', () => this.openSettings());
                 this.settingsClose.addEventListener('click', () => this.closeSettings());
                 this.settingsOverlay.addEventListener('click', () => this.closeSettings());
-
                 this.editClose.addEventListener('click', () => this.closeEdit());
                 this.editCancel.addEventListener('click', () => this.closeEdit());
-                this.editOverlay.addEventListener('click', (e) => {
-                    if (e.target === this.editOverlay) this.closeEdit();
-                });
+                this.editOverlay.addEventListener('click', (e) => { if (e.target === this.editOverlay) this.closeEdit(); });
                 this.editSave.addEventListener('click', () => this.saveEdit());
+            }
 
-                this.filterBtns.forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        const filter = e.currentTarget.dataset.filter;
-                        this.setFilter(filter);
-                    });
-                });
-
-                this.statCards.forEach(card => {
-                    card.addEventListener('click', (e) => {
-                        const stat = e.currentTarget.dataset.stat;
-                        this.setFilter(stat === 'all' ? 'all' : stat === 'completed' ? 'completed' : 'pending');
-                    });
+            sortTodos() {
+                const order = { high: 0, medium: 1, low: 2 };
+                this.todos.sort((a, b) => {
+                    const pa = order[a.priority || 'medium'];
+                    const pb = order[b.priority || 'medium'];
+                    if (pa !== pb) return pa - pb;
+                    return b.id - a.id;
                 });
             }
 
@@ -1393,33 +459,21 @@
                 this.updateSlider();
                 this.applyOpacity();
                 localStorage.setItem('opacity', this.opacity);
-
-                this.presetBtns.forEach(btn => {
-                    btn.classList.toggle('active', parseInt(btn.dataset.opacity) === this.opacity);
-                });
+                this.presetBtns.forEach(btn => btn.classList.toggle('active', parseInt(btn.dataset.opacity) === this.opacity));
             }
 
             updateSlider() {
-                const percentage = ((this.opacity - 20) / (100 - 20)) * 100;
-                this.sliderFill.style.width = percentage + '%';
-                this.sliderThumb.style.left = percentage + '%';
+                const pct = ((this.opacity - 20) / 80) * 100;
+                this.sliderFill.style.width = pct + '%';
+                this.sliderThumb.style.left = pct + '%';
             }
 
             applyOpacity() {
-                document.querySelectorAll('.widget-card').forEach(card => {
-                    card.style.opacity = this.opacity / 100;
-                });
+                document.querySelectorAll('.widget-card').forEach(card => card.style.opacity = this.opacity / 100);
             }
 
-            openSettings() {
-                this.settingsPanel.classList.add('active');
-                this.settingsOverlay.classList.add('active');
-            }
-
-            closeSettings() {
-                this.settingsPanel.classList.remove('active');
-                this.settingsOverlay.classList.remove('active');
-            }
+            openSettings() { this.settingsPanel.classList.add('active'); this.settingsOverlay.classList.add('active'); }
+            closeSettings() { this.settingsPanel.classList.remove('active'); this.settingsOverlay.classList.remove('active'); }
 
             openEdit(todo = null) {
                 this.editingTodo = todo;
@@ -1437,226 +491,115 @@
                 this.editOverlay.classList.add('active');
             }
 
-            closeEdit() {
-                this.editOverlay.classList.remove('active');
-                this.editingTodo = null;
-            }
+            closeEdit() { this.editOverlay.classList.remove('active'); this.editingTodo = null; }
 
             saveEdit() {
                 const title = this.editTitle.value.trim();
-                if (!title) {
-                    alert('请输入标题');
-                    return;
-                }
-
+                if (!title) return;
                 if (this.editingTodo) {
                     const todo = this.todos.find(t => t.id === this.editingTodo.id);
-                    if (todo) {
-                        todo.text = title;
-                        todo.description = this.editDescription.value.trim();
-                        todo.priority = this.editPriority.value;
-                    }
+                    if (todo) { todo.text = title; todo.description = this.editDescription.value.trim(); todo.priority = this.editPriority.value; }
                 } else {
-                    this.addTodoFromEdit(title, this.editDescription.value.trim(), this.editPriority.value);
+                    this.todos.push({ id: Date.now(), text: title, description: this.editDescription.value.trim(), completed: false, createdAt: new Date().toLocaleString('zh-CN'), priority: this.editPriority.value });
                 }
-
-                this.saveTodos();
-                this.renderTodos();
-                this.updateStats();
+                this.saveAndRender();
                 this.closeEdit();
-            }
-
-            addTodoFromEdit(title, description, priority) {
-                const todo = {
-                    id: Date.now(),
-                    text: title,
-                    description: description,
-                    completed: false,
-                    createdAt: new Date().toLocaleString('zh-CN'),
-                    priority: priority
-                };
-                this.todos.unshift(todo);
             }
 
             addTodo() {
                 const text = this.todoInput.value.trim();
-                if (!text) {
-                    return;
-                }
-
-                const todo = {
-                    id: Date.now(),
-                    text,
-                    description: '',
-                    completed: false,
-                    createdAt: new Date().toLocaleString('zh-CN'),
-                    priority: 'medium'
-                };
-
-                this.todos.unshift(todo);
-                this.saveTodos();
-                this.renderTodos();
-                this.updateStats();
+                if (!text) return;
+                this.todos.push({ id: Date.now(), text, description: '', completed: false, createdAt: new Date().toLocaleString('zh-CN'), priority: 'medium' });
                 this.todoInput.value = '';
+                this.saveAndRender();
             }
 
             toggleTodo(id) {
                 const todo = this.todos.find(t => t.id === id);
-                if (todo) {
-                    todo.completed = !todo.completed;
-                    this.saveTodos();
-                    this.renderTodos();
-                    this.updateStats();
-                }
+                if (todo) { todo.completed = !todo.completed; this.saveAndRender(); }
             }
 
-            deleteTodo(id) {
-                this.todos = this.todos.filter(t => t.id !== id);
-                this.saveTodos();
-                this.renderTodos();
-                this.updateStats();
+            deleteTodo(id) { this.todos = this.todos.filter(t => t.id !== id); this.saveAndRender(); }
+
+            saveTodos() { localStorage.setItem('todos', JSON.stringify(this.todos)); }
+
+            saveAndRender() { this.saveTodos(); this.sortTodos(); this.renderTodos(); this.updateStats(); }
+
+            handleDragStart(e, index) {
+                this.draggedIndex = index;
+                e.target.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
             }
-
-            setFilter(filter) {
-                this.filter = filter;
-                
-                this.filterBtns.forEach(btn => {
-                    btn.classList.toggle('active', btn.dataset.filter === filter);
-                });
-
-                this.statCards.forEach(card => {
-                    const statFilter = card.dataset.stat === 'all' ? 'all' : card.dataset.stat;
-                    card.classList.toggle('active', statFilter === filter);
-                });
-
-                this.renderTodos();
-            }
-
-            getFilteredTodos() {
-                if (this.filter === 'completed') {
-                    return this.todos.filter(t => t.completed);
-                } else if (this.filter === 'pending') {
-                    return this.todos.filter(t => !t.completed);
-                }
-                return this.todos;
-            }
-
-            saveTodos() {
-                localStorage.setItem('todos', JSON.stringify(this.todos));
+            handleDragOver(e, index) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }
+            handleDragEnd(e) { e.target.classList.remove('dragging'); this.draggedIndex = null; }
+            handleDrop(e, targetIndex) {
+                e.preventDefault();
+                if (this.draggedIndex === null || this.draggedIndex === targetIndex) return;
+                const item = this.todos.splice(this.draggedIndex, 1)[0];
+                this.todos.splice(targetIndex, 0, item);
+                this.draggedIndex = null;
+                this.saveAndRender();
             }
 
             renderTodos() {
-                const filteredTodos = this.getFilteredTodos();
-                
-                if (filteredTodos.length === 0) {
+                if (this.todos.length === 0) {
                     this.emptyState.style.display = 'block';
                     this.todoList.innerHTML = '';
                     this.todoList.appendChild(this.emptyState);
                     return;
                 }
-
                 this.emptyState.style.display = 'none';
-                this.todoList.innerHTML = filteredTodos.map(todo => this.createTodoHTML(todo)).join('');
-
-                this.todoList.querySelectorAll('.todo-item').forEach(item => {
+                this.todoList.innerHTML = this.todos.map((todo, i) => this.createTodoHTML(todo, i)).join('');
+                this.todoList.querySelectorAll('.todo-item').forEach((item, i) => {
                     const id = parseInt(item.dataset.id);
-                    
-                    item.querySelector('.todo-checkbox').addEventListener('click', () => {
-                        this.toggleTodo(id);
-                    });
-
-                    item.querySelector('.edit-btn').addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        const todo = this.todos.find(t => t.id === id);
-                        this.openEdit(todo);
-                    });
-
-                    item.querySelector('.delete-btn').addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        this.deleteTodo(id);
-                    });
-
-                    item.addEventListener('dblclick', () => {
-                        const todo = this.todos.find(t => t.id === id);
-                        this.openEdit(todo);
-                    });
+                    item.addEventListener('dragstart', (e) => this.handleDragStart(e, i));
+                    item.addEventListener('dragover', (e) => this.handleDragOver(e, i));
+                    item.addEventListener('drop', (e) => this.handleDrop(e, i));
+                    item.addEventListener('dragend', (e) => this.handleDragEnd(e));
+                    item.querySelector('.todo-checkbox').addEventListener('click', () => this.toggleTodo(id));
+                    item.querySelector('.edit-btn').addEventListener('click', (e) => { e.stopPropagation(); this.openEdit(this.todos.find(t => t.id === id)); });
+                    item.querySelector('.delete-btn').addEventListener('click', (e) => { e.stopPropagation(); this.deleteTodo(id); });
+                    item.addEventListener('dblclick', () => this.openEdit(this.todos.find(t => t.id === id)));
                 });
             }
 
-            createTodoHTML(todo) {
-                const priorityLabel = {
-                    'high': '高',
-                    'medium': '中',
-                    'low': '低'
-                }[todo.priority || 'medium'];
-
-                const priorityClass = `priority-${todo.priority || 'medium'}`;
-
+            createTodoHTML(todo, index) {
+                const label = { high: '高', medium: '中', low: '低' }[todo.priority || 'medium'];
+                const cls = `priority-${todo.priority || 'medium'}`;
                 return `
-                    <div class="todo-item ${todo.completed ? 'completed' : ''}" data-id="${todo.id}">
-                        <div class="todo-checkbox ${todo.completed ? 'checked' : ''}">
-                            ${todo.completed ? '<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>' : ''}
-                        </div>
+                    <div class="todo-item ${todo.completed ? 'completed' : ''}" data-id="${todo.id}" draggable="true">
+                        <div class="priority-indicator ${cls}"></div>
+                        <div class="drag-handle"><svg viewBox="0 0 24 24"><path d="M11 18c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zm-2-8c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0-6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm6 4c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg></div>
+                        <div class="todo-checkbox ${todo.completed ? 'checked' : ''}">${todo.completed ? '<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>' : ''}</div>
                         <div class="todo-content">
                             <div class="todo-text">${this.escapeHtml(todo.text)}</div>
-                            ${todo.description ? `<div class="todo-description">${this.escapeHtml(todo.description)}</div>` : ''}
-                            <div class="todo-meta">
-                                <span class="todo-time">
-                                    <svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
-                                    ${todo.createdAt}
-                                </span>
-                                <span class="todo-priority ${priorityClass}">${priorityLabel}</span>
+                            <div class="todo-details">
+                                ${todo.description ? `<div class="todo-description">${this.escapeHtml(todo.description)}</div>` : ''}
+                                <div class="todo-meta">
+                                    <span class="todo-time"><svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>${todo.createdAt}</span>
+                                    <span class="todo-priority ${cls}">${label}</span>
+                                </div>
                             </div>
                         </div>
                         <div class="todo-actions">
-                            <button class="action-icon-btn edit edit-btn">
-                                <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
-                            </button>
-                            <button class="action-icon-btn delete delete-btn">
-                                <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
-                            </button>
+                            <button class="action-icon-btn edit edit-btn"><svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></button>
+                            <button class="action-icon-btn delete delete-btn"><svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg></button>
                         </div>
-                        <div class="todo-tooltip">
-                            <div class="tooltip-title">${this.escapeHtml(todo.text)}</div>
-                            ${todo.description ? `<div class="tooltip-description">${this.escapeHtml(todo.description)}</div>` : '<div class="tooltip-description">暂无详细描述</div>'}
-                            <div class="tooltip-meta">
-                                <div class="tooltip-meta-item">
-                                    <svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
-                                    ${todo.createdAt}
-                                </div>
-                                <div class="tooltip-meta-item">
-                                    <span class="todo-priority ${priorityClass}">${priorityLabel}优先级</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `;
+                    </div>`;
             }
 
-            escapeHtml(text) {
-                const div = document.createElement('div');
-                div.textContent = text;
-                return div.innerHTML;
-            }
+            escapeHtml(text) { const d = document.createElement('div'); d.textContent = text; return d.innerHTML; }
 
             updateStats() {
                 const total = this.todos.length;
                 const completed = this.todos.filter(t => t.completed).length;
-                const pending = total - completed;
-
                 this.totalCount.textContent = total;
                 this.completedCount.textContent = completed;
-                this.pendingCount.textContent = pending;
-
-                document.getElementById('filterAllCount').textContent = total;
-                document.getElementById('filterPendingCount').textContent = pending;
-                document.getElementById('filterCompletedCount').textContent = completed;
+                this.pendingCount.textContent = total - completed;
             }
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            new TodoApp();
-        });
+        document.addEventListener('DOMContentLoaded', () => new TodoApp());
     </script>
 </body>
 </html>
