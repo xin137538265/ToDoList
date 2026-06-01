@@ -1,8 +1,8 @@
-# 桌面待办事项插件 - 设计文档
+# TodoList Widget - 设计文档
 
 ## 项目概述
 
-一个可调节透明度的桌面待办事项小插件，采用卡片式设计，支持贴在系统桌面上。基于 Web 技术栈开发，可通过 Electron 打包为桌面应用。
+一个轻量级桌面待办事项 Widget，采用玻璃拟态设计，支持透明度调节、置顶显示、常驻桌面。基于 **Tauri 2.0** 构建，打包体积小（3-8MB）、内存占用低（10-30MB）、支持开机自启，可打包后直接发送给同事使用。
 
 ---
 
@@ -16,8 +16,11 @@
 ### 核心特点
 | 特点 | 说明 |
 |------|------|
+| 轻量级 | 打包 3-8MB，内存 10-30MB，CPU 占用极低 |
 | 透明度调节 | 20%-100% 无极调节，支持预设快捷设置 |
 | 置顶显示 | 始终保持在桌面最上层 |
+| 常驻后台 | 关闭窗口后驻留系统托盘，不退出进程 |
+| 开机启动 | 可选开机自动启动 |
 | 卡片式布局 | 每个待办事项独立卡片，支持拖拽排序 |
 | 数据持久化 | 本地存储，关闭后数据不丢失 |
 
@@ -28,32 +31,65 @@
 ### 核心功能
 
 #### 1. 待办事项管理
-- [x] 添加待办事项
+- [x] 添加待办事项（输入框 + 回车/按钮）
 - [x] 标记完成/未完成
 - [x] 删除待办事项
 - [x] 拖拽排序
-- [x] 双击编辑
+- [x] 双击编辑（标题、描述、优先级、截止时间）
+- [x] 优先级设置（高/中/低），标题行内联显示
+- [x] 操作通知反馈（添加/删除/完成/错误）
 
-#### 2. 透明度控制
+#### 2. 截止时间与倒计时
+- [x] 快捷设置截止时间（1小时后/3小时后/今天结束/明天此时/3天后/一周后）
+- [x] 自定义日期+时间选择，带确认按钮
+- [x] 当前截止时间显示与清除
+- [x] 卡片内动态倒计时显示（每秒更新）
+- [x] 倒计时颜色分级：正常(紫) → 警告(橙) → 紧急(红闪烁) → 超期(红加粗)
+
+#### 3. 任务筛选
+- [x] 默认只显示待完成任务
+- [x] 点击统计卡片切换筛选（待完成/已完成/全部）
+- [x] 筛选标签快速切换
+- [x] 不同筛选状态显示不同空列表提示
+
+#### 4. 透明度控制
 - [x] 滑块无极调节 (20%-100%)
 - [x] 预设快捷键 (30%, 50%, 85%, 100%)
 - [x] 实时预览效果
 - [x] 记忆上次设置
 
-#### 3. 数据统计
-- [x] 待办总数
-- [x] 已完成数量
+#### 5. 数据统计
 - [x] 待完成数量
+- [x] 已完成数量
+- [x] 总计数量
+- [x] 统计卡片可点击，联动筛选
+
+### 桌面集成功能
+
+#### 6. 窗口管理
+- [ ] 无边框透明窗口
+- [ ] 窗口置顶 (always-on-top)
+- [ ] 窗口拖拽移动
+- [ ] 窗口位置记忆
+
+#### 7. 系统托盘
+- [ ] 关闭窗口时最小化到托盘
+- [ ] 托盘图标右键菜单（显示窗口/退出）
+- [ ] 托盘图标点击恢复窗口
+
+#### 8. 开机启动
+- [ ] 设置中可开关开机自启
+- [ ] 启动时最小化到托盘（可选）
+
+#### 9. 全局快捷键
+- [ ] 快速唤出/隐藏窗口
+- [ ] 快速添加待办
 
 ### 扩展功能（后续版本）
-
-- [ ] 优先级设置 (高/中/低)
-- [ ] 到期提醒
-- [ ] 分类/标签
-- [ ] 主题切换
+- [ ] 到期提醒通知
+- [ ] 主题切换（亮色/暗色）
 - [ ] 数据导出/导入
-- [ ] 云同步
-- [ ] 全局快捷键
+- [ ] 多窗口支持
 
 ---
 
@@ -63,61 +99,97 @@
 
 | 层级 | 技术 | 说明 |
 |------|------|------|
-| 桌面框架 | Electron | 跨平台桌面应用，支持透明度、置顶等特性 |
-| 前端框架 | Vue.js 3 | 响应式数据绑定，组件化开发 |
-| 语言 | TypeScript | 类型安全，更好的开发体验 |
-| 样式 | CSS3 + 自定义属性 | 现代CSS特性，玻璃拟态效果 |
-| 存储 | localStorage / SQLite | 本地数据持久化 |
+| 桌面框架 | **Tauri 2.0** | Rust 后端 + 系统 WebView，极低资源占用 |
+| 前端 | 原生 HTML/CSS/JS | 无框架依赖，轻量直接，现有代码复用 |
+| 后端语言 | Rust | Tauri 原生，处理系统 API 调用 |
+| 样式 | CSS3 + 自定义属性 | 玻璃拟态效果，CSS 变量主题 |
+| 存储 | localStorage | 前端本地持久化，Tauri 可扩展为文件存储 |
+
+### 为什么选择 Tauri 2.0
+
+| 对比项 | Electron | **Tauri 2.0** |
+|--------|----------|---------------|
+| 打包体积 | 80-150MB | **3-8MB** |
+| 内存占用 | 100-200MB | **10-30MB** |
+| 启动速度 | 较慢 | **极快** |
+| 透明窗口 | ✅ | ✅ |
+| 系统托盘 | ✅ | ✅ |
+| 开机自启 | ✅ | ✅ |
+| 全局快捷键 | ✅ | ✅ |
+| WebView | 捆绑 Chromium | **系统原生** |
+| 安全性 | 一般 | **Rust 安全模型** |
 
 ### 项目结构
 
 ```
 todo-widget/
-├── package.json
-├── electron/
-│   ├── main.js          # Electron 主进程
-│   └── preload.js       # 预加载脚本
-├── src/
-│   ├── main.ts          # Vue 入口
-│   ├── App.vue          # 根组件
-│   ├── components/
-│   │   ├── TodoInput.vue    # 输入组件
-│   │   ├── TodoList.vue     # 列表组件
-│   │   ├── TodoCard.vue     # 卡片组件
-│   │   ├── OpacitySlider.vue# 透明度滑块
-│   │   └── Stats.vue        # 统计组件
-│   ├── composables/
-│   │   └── useTodos.ts      # 待办逻辑
-│   ├── store/
-│   │   └── todoStore.ts     # 状态管理
-│   └── styles/
-│       └── global.css       # 全局样式
-└── public/
-    └── index.html
+├── src-tauri/                  # Tauri 后端（Rust）
+│   ├── src/
+│   │   └── main.rs             # 主入口：窗口配置、托盘、自启、快捷键
+│   ├── Cargo.toml              # Rust 依赖
+│   ├── tauri.conf.json         # Tauri 核心配置
+│   ├── capabilities/
+│   │   └── default.json        # 权限声明
+│   └── icons/                  # 应用图标（各尺寸）
+├── src/                        # 前端
+│   └── index.html              # 主页面（现有 index-v2.html）
+├── package.json                # Node 依赖（仅开发工具）
+├── design.md                   # 设计文档
+└── README.md                   # 项目说明
 ```
 
-### Electron 主进程配置
+### Tauri 窗口配置
 
-```javascript
-const createTodoWindow = () => {
-  todoWindow = new BrowserWindow({
-    width: 360,
-    height: 520,
-    frame: false,              // 无边框窗口
-    transparent: true,         // 支持透明
-    alwaysOnTop: true,         // 置顶显示
-    skipTaskbar: true,         // 不显示在任务栏
-    hasShadow: true,           // 窗口阴影
-    webPreferences: {
-      nodeIntegration: false,
-      contextIsolation: true,
-      preload: path.join(__dirname, 'preload.js')
+```json
+{
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "TodoList Widget",
+        "width": 420,
+        "height": 640,
+        "decorations": false,
+        "transparent": true,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "resizable": true
+      }
+    ],
+    "trayIcon": {
+      "iconPath": "icons/icon.png",
+      "tooltip": "TodoList Widget"
     }
-  });
-  
-  todoWindow.loadFile('dist/index.html');
-  todoWindow.setOpacity(0.85);
-};
+  }
+}
+```
+
+### Rust 后端核心逻辑
+
+```rust
+// 系统托盘菜单
+fn create_tray() -> SystemTray {
+    let show = CustomMenuItem::new("show", "显示窗口");
+    let quit = CustomMenuItem::new("quit", "退出");
+    let menu = SystemTrayMenu::new()
+        .add_item(show)
+        .add_native_item(SystemTrayMenuItem::Separator)
+        .add_item(quit);
+    SystemTray::new().with_menu(menu)
+}
+
+// 关闭窗口时隐藏到托盘而非退出
+fn on_window_close(event: WindowEvent) {
+    if let WindowEvent::CloseRequested { .. } = event {
+        app.hide(); // 隐藏而非退出
+    }
+}
+
+// 开机自启
+fn toggle_autostart(enable: bool) {
+    let manager = autostart::Manager::new();
+    if enable { manager.enable() } else { manager.disable() }
+}
 ```
 
 ---
@@ -134,47 +206,76 @@ const createTodoWindow = () => {
   --success: #4ECB71;        /* 成功色 - 绿色 */
   --warning: #FFB74D;        /* 警告色 - 橙色 */
   --danger: #FF5252;         /* 危险色 - 红色 */
-  
+
   --bg-dark: #1A1A2E;        /* 背景深色 */
   --bg-medium: #16213E;      /* 背景中色 */
   --bg-light: #0F3460;       /* 背景浅色 */
-  
+
   --glass-bg: rgba(255, 255, 255, 0.08);
   --glass-border: rgba(255, 255, 255, 0.15);
 }
 ```
 
-### 组件设计
+### 卡片布局设计
 
-#### 透明度滑块
-- 范围：20% - 100%
-- 步长：1%
-- 预设值：30%, 50%, 85%, 100%
-- 视觉：渐变色填充，圆形拖动钮
-
-#### 待办卡片
 ```
-┌──────────────────────────────────┐
-│ [☐] 待办事项内容                [×]│
-│     🕐 创建时间                  │
-└──────────────────────────────────┘
+┌─────────────────────────────────────────┐
+│ ▎ ⋮⋮ [☐] 待办事项内容  [高]   ✏️ 🗑 │
+│ ▎         🕐 6/1 20:54 | ⏱ 剩余1天23小时│
+│ ▎         ┌─ 描述文字（hover展开）─────┐│
+│ ▎         └───────────────────────────┘│
+└─────────────────────────────────────────┘
+  ↑          ↑                ↑
+  优先级      创建时间+倒计时    描述(hover)
+  色条       同一行显示
 ```
 
-#### 输入区域
+### 倒计时颜色分级
+
+| 状态 | 条件 | 颜色 | 效果 |
+|------|------|------|------|
+| 正常 | >1天 | 紫色 `#8B85FF` | 无 |
+| 警告 | ≤1天 | 橙色 `#FFB74D` | 无 |
+| 紧急 | ≤3小时 | 红色 `#FF5252` | 闪烁动画 |
+| 超期 | 已过期 | 红色 `#FF5252` | 加粗 |
+
+### 截止时间选择器
+
 ```
-┌─────────────────────┐ ┌──────────┐
-│ 输入待办事项...      │ │ [+ 添加] │
-└─────────────────────┘ └──────────┘
+┌─────────────────────────────────────────┐
+│ 快捷设置：                               │
+│ [1小时后] [3小时后] [今天结束]            │
+│ [明天此时] [3天后]   [一周后]             │
+├─────────────────────────────────────────┤
+│ 自定义：                                 │
+│ [日期选择器] [时间选择器] [确认]          │
+├─────────────────────────────────────────┤
+│ 当前设置：截止 2026/6/3 20:54    [清除]  │
+└─────────────────────────────────────────┘
+```
+
+### 通知组件
+
+```
+┌──────────────────────────┐
+│ ✅ 待办事项已添加         │  ← 右上角弹出，2.5s 自动消失
+└──────────────────────────┘
+┌──────────────────────────┐
+│ ❌ 请输入待办事项内容     │  ← 错误通知，红色左边框
+└──────────────────────────┘
 ```
 
 ### 动画效果
 
 | 动画 | 触发条件 | 效果 |
 |------|----------|------|
-| slideUp | 页面加载/卡片出现 | 从下方滑入 |
-| fadeIn | 元素显示 | 透明度渐变 |
-| scale | 按钮点击 | 缩放反馈 |
-| slideOut | 删除待办 | 向右滑出消失 |
+| slideDown | 页面加载 | Header 从上方滑入 |
+| slideUp | 页面加载 | 卡片从下方滑入 |
+| todoSlideIn | 新增待办 | 从左侧滑入 |
+| notifSlideIn | 操作通知 | 从右侧滑入 |
+| notifSlideOut | 通知消失 | 向右侧滑出 |
+| countdownPulse | 倒计时紧急 | 红色闪烁 |
+| logoShine | Logo 光效 | 光泽扫过 |
 
 ---
 
@@ -184,12 +285,14 @@ const createTodoWindow = () => {
 
 | 操作 | 方式 | 效果 |
 |------|------|------|
-| 添加待办 | 输入文字 + 回车/点击按钮 | 新卡片出现在列表顶部 |
-| 完成待办 | 点击复选框 | 文字添加删除线，透明度降低 |
-| 删除待办 | 点击删除按钮 | 卡片滑出动画后移除 |
-| 编辑待办 | 双击文字 | 进入编辑模式 |
+| 添加待办 | 输入文字 + 回车/点击按钮 | 新卡片出现，弹出成功通知 |
+| 完成待办 | 点击复选框 | 文字添加删除线，弹出通知 |
+| 删除待办 | 点击删除按钮 | 卡片移除，弹出通知 |
+| 编辑待办 | 双击卡片 / 点击编辑按钮 | 打开编辑弹窗 |
 | 拖拽排序 | 长按拖动 | 调整卡片顺序 |
 | 调节透明度 | 拖动滑块/点击预设 | 实时更新窗口透明度 |
+| 切换筛选 | 点击统计卡片 / 切换标签 | 切换显示待完成/已完成/全部 |
+| 设置截止时间 | 快捷按钮 / 自定义选择+确认 | 设置后卡片显示倒计时 |
 
 ### 快捷键
 
@@ -197,8 +300,9 @@ const createTodoWindow = () => {
 |--------|------|
 | Ctrl/Cmd + N | 聚焦输入框 |
 | Enter | 添加待办 |
-| Ctrl/Cmd + W | 关闭窗口（不退出） |
+| Ctrl/Cmd + W | 隐藏窗口到托盘 |
 | Ctrl/Cmd + Q | 退出应用 |
+| Ctrl/Cmd + Shift + T | 全局唤出/隐藏窗口 |
 
 ---
 
@@ -206,18 +310,22 @@ const createTodoWindow = () => {
 
 ```typescript
 interface Todo {
-  id: number;           // 唯一标识（时间戳）
-  text: string;         // 待办内容
+  id: number;           // 唯一标识
+  text: string;         // 待办标题
+  description: string;  // 详细描述
   completed: boolean;   // 是否完成
-  createdAt: string;    // 创建时间
-  updatedAt?: string;   // 更新时间
-  priority?: 'low' | 'medium' | 'high';  // 优先级
+  createdAt: string;    // 创建时间（本地格式）
+  priority: 'low' | 'medium' | 'high';  // 优先级
+  deadline: string;     // 截止时间（ISO 格式，如 "2026-06-03T20:54"）
 }
 
-interface Settings {
+interface AppSettings {
   opacity: number;      // 透明度 0.2 - 1.0
-  theme: string;        // 主题名称
-  position: { x: number, y: number };  // 窗口位置
+  autoStart: boolean;   // 开机自启
+  startMinimized: boolean; // 启动时最小化到托盘
+  windowPosition: { x: number, y: number };  // 窗口位置
+  windowSize: { width: number, height: number }; // 窗口大小
+  filter: 'pending' | 'completed' | 'all';  // 当前筛选状态
 }
 ```
 
@@ -225,54 +333,54 @@ interface Settings {
 
 ## 开发计划
 
-### Phase 1: 基础框架 (1-2周)
-- [ ] 初始化 Electron + Vue 项目
-- [ ] 搭建主进程和渲染进程
-- [ ] 实现基础窗口配置（透明、置顶、无边框）
-- [ ] 待办数据模型定义
+### Phase 1: Tauri 项目搭建
+- [ ] 初始化 Tauri 2.0 项目
+- [ ] 迁移现有前端代码到 Tauri 项目
+- [ ] 配置窗口属性（透明、置顶、无边框）
+- [ ] 验证前端功能在 Tauri WebView 中正常运行
 
-### Phase 2: 核心功能 (2-3周)
-- [ ] 待办增删改查
-- [ ] 透明度控制组件
-- [ ] 数据持久化 (localStorage)
-- [ ] 统计面板
+### Phase 2: 桌面集成
+- [ ] 实现系统托盘（图标、右键菜单、点击恢复）
+- [ ] 关闭窗口时隐藏到托盘而非退出
+- [ ] 实现开机自启（设置开关）
+- [ ] 窗口位置记忆
+- [ ] 窗口拖拽区域（CSS `-webkit-app-region: drag`）
 
-### Phase 3: UI 优化 (1-2周)
-- [ ] 玻璃拟态样式完善
-- [ ] 动画效果实现
-- [ ] 响应式适配
-- [ ] 主题系统
+### Phase 3: 功能增强
+- [ ] 全局快捷键（唤出/隐藏窗口）
+- [ ] Tauri 原生通知（到期提醒）
+- [ ] 设置持久化迁移（localStorage → Tauri 文件存储）
 
-### Phase 4: 打包发布 (1周)
-- [ ] 图标和启动画面
+### Phase 4: 打包发布
+- [ ] 应用图标设计（各尺寸）
+- [ ] macOS .dmg 打包
+- [ ] Windows .msi 打包
 - [ ] 自动更新配置
-- [ ] 安装包打包 (Windows/Mac)
-- [ ] 发布到 GitHub Releases
-
----
-
-## 创意参考来源
-
-- **Dribbble**: 搜索 "glassmorphism todo app" 获取视觉灵感
-- **Pinterest**: 搜索 "desktop widget design" 参考布局
-- **Mobbin**: 参考优秀待办应用的交互设计
-- **Glassmorphism.app**: 玻璃拟态设计工具
+- [ ] 分发给同事测试
 
 ---
 
 ## 技术难点与解决方案
 
-### 1. 透明度与鼠标穿透
-**问题**: 透明度过高时，内容难以辨认
-**方案**: 设置最低透明度 20%，文字始终使用高对比度颜色
+### 1. 透明窗口与鼠标穿透
+**问题**: 透明度过高时，内容难以辨认；透明区域是否应穿透鼠标事件
+**方案**: 设置最低透明度 20%，文字始终使用高对比度颜色；Tauri 2.0 支持 `ignore_cursor_events` API 可按需开启鼠标穿透
 
-### 2. 窗口拖拽
+### 2. 无边框窗口拖拽
 **问题**: 无边框窗口无法移动
-**方案**: 通过 CSS `-webkit-app-region: drag` 设置拖拽区域
+**方案**: 通过 CSS `-webkit-app-region: drag` 设置拖拽区域，按钮等交互元素使用 `-webkit-app-region: no-drag` 排除
 
-### 3. 数据同步
+### 3. 关闭窗口 vs 退出应用
+**问题**: 用户点击关闭按钮时应隐藏到托盘而非退出
+**方案**: Tauri `on_window_event` 拦截 `CloseRequested` 事件，调用 `window.hide()` 阻止默认关闭行为
+
+### 4. 单实例运行
 **问题**: 多实例运行可能导致数据冲突
-**方案**: 使用 single-instance-lock 限制单实例运行
+**方案**: Tauri 2.0 内置单实例插件 `tauri-plugin-single-instance`，第二个实例启动时激活已有窗口
+
+### 5. 跨平台 WebView 差异
+**问题**: macOS 使用 WebKit，Windows 使用 WebView2，CSS/JS 行为可能不同
+**方案**: 使用标准 CSS 特性，避免浏览器私有 API；关键功能在双平台测试
 
 ---
 
@@ -280,6 +388,8 @@ interface Settings {
 
 | 文件 | 说明 |
 |------|------|
-| design.html | 设计展示页面（包含交互原型） |
-| index.html | 功能完整的待办应用（可直接运行） |
 | design.md | 本设计文档 |
+| design.html | 设计展示页面（早期原型） |
+| index.html | V1 版本待办应用（参考） |
+| index-v2.html | V2 版本待办应用（当前设计基准） |
+| README.md | 项目说明文档 |
