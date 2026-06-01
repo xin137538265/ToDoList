@@ -18,7 +18,7 @@
 
 ## 截图
 
-> 玻璃拟态暗色主题，卡片式布局，动态倒计时
+![TodoList Widget](docs/screenshot.png)
 
 ## 技术栈
 

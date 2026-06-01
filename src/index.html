@@ -61,6 +61,7 @@
         .app-container { position: relative; z-index: 1; max-width: 480px; margin: 0 auto; padding: 40px 20px; }
 
         .app-header { text-align: center; margin-bottom: 40px; animation: slideDown 0.8s ease-out; -webkit-app-region: drag; }
+        .app-header * { -webkit-app-region: drag; }
         @keyframes slideDown { from { opacity: 0; transform: translateY(-30px); } to { opacity: 1; transform: translateY(0); } }
 
         .app-logo {
@@ -371,7 +372,7 @@
 </head>
 <body>
     <div class="app-container">
-        <header class="app-header">
+        <header class="app-header" data-tauri-drag-region>
             <div class="app-logo"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div>
             <h1 class="app-title">TodoList Widget</h1>
             <p class="app-subtitle">透明待办事项 · 桌面插件</p>
