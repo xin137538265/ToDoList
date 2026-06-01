@@ -1,5 +1,7 @@
 # 忽略文件
 node_modules/
+src-tauri/target/
+dist/
 dist/
 build/
 *.log
