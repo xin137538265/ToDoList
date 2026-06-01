@@ -48,8 +48,8 @@
 
 ## Phase 3: 打包发布
 
-- [ ] Task 7: 应用图标 + 打包
+- [x] Task 7: 应用图标 + 打包
   - [x] Step 7.1: 生成应用图标（各尺寸 PNG + ICNS/ICO）
   - [x] Step 7.2: 配置 `tauri.conf.json` 中的 `bundle` 设置
-  - [ ] Step 7.3: 运行 `npm run tauri build` 生成安装包
-  - [ ] Step 7.4: 验证 `.dmg` 安装包能否正常安装和运行
+  - [x] Step 7.3: 运行 `npm run tauri build` 生成安装包
+  - [x] Step 7.4: 验证 `.dmg` 安装包能否正常安装和运行
