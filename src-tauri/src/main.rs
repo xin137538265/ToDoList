@@ -116,7 +116,25 @@ fn main() {
                 }
             });
 
-            // Restore window position
+            if let Some(window) = app.get_webview_window("main") {
+                #[cfg(target_os = "windows")]
+                {
+                    use windows::Win32::UI::WindowsAndMessaging::*;
+                    use windows::Win32::Foundation::*;
+                    if let Ok(hwnd) = window.hwnd() {
+                        let hwnd = HWND(hwnd.0);
+                        unsafe {
+                            let ex_style = GetWindowLongPtrW(hwnd, GWL_EXSTYLE);
+                            SetWindowLongPtrW(
+                                hwnd,
+                                GWL_EXSTYLE,
+                                ex_style | (WS_EX_TOOLWINDOW.0 as isize) | (WS_EX_LAYERED.0 as isize),
+                            );
+                        }
+                    }
+                }
+            }
+
             if let Some(state) = load_window_state() {
                 if let Some(window) = app.get_webview_window("main") {
                     let _ = window.set_position(PhysicalPosition::new(state.x, state.y));
