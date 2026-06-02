@@ -375,10 +375,10 @@
 </head>
 <body>
     <div class="app-container">
-        <header class="app-header" id="appHeader">
-            <div class="app-logo"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div>
-            <h1 class="app-title">TodoList Widget</h1>
-            <p class="app-subtitle">透明待办事项 · 桌面插件</p>
+        <header class="app-header" id="appHeader" data-tauri-drag-region>
+            <div class="app-logo" data-tauri-drag-region><svg viewBox="0 0 24 24" data-tauri-drag-region><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div>
+            <h1 class="app-title" data-tauri-drag-region>TodoList Widget</h1>
+            <p class="app-subtitle" data-tauri-drag-region>透明待办事项 · 桌面插件</p>
         </header>
 
         <div class="widget-card">
@@ -609,7 +609,6 @@
                 });
 
                 this.autostartToggle.addEventListener('change', () => this.toggleAutostart());
-                this.appHeader.addEventListener('mousedown', () => this.startDragging());
             }
 
             async toggleAutostart() {
@@ -621,15 +620,6 @@
                 } catch (e) {
                     this.autostartToggle.checked = !enabled;
                     console.warn('Autostart toggle failed (may not be in Tauri env):', e);
-                }
-            }
-
-            async startDragging() {
-                try {
-                    const { invoke } = window.__TAURI__.core;
-                    await invoke('start_dragging');
-                } catch (e) {
-                    console.warn('Start dragging failed (may not be in Tauri env):', e);
                 }
             }
 

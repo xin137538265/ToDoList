@@ -42,6 +42,97 @@ fn save_window_state(window: &tauri::Window) {
     }
 }
 
+#[cfg(target_os = "windows")]
+fn embed_into_desktop(hwnd: windows::Win32::Foundation::HWND) {
+    use windows::Win32::UI::WindowsAndMessaging::*;
+    use windows::Win32::Foundation::*;
+
+    unsafe {
+        let ex_style = GetWindowLongPtrW(hwnd, GWL_EXSTYLE);
+        SetWindowLongPtrW(
+            hwnd,
+            GWL_EXSTYLE,
+            ex_style | (WS_EX_TOOLWINDOW.0 as isize) | (WS_EX_LAYERED.0 as isize),
+        );
+
+        let progman = FindWindowW(windows::core::w!("Progman"), None);
+        if let Ok(progman) = progman {
+            let mut result_hwnd: Option<HWND> = None;
+
+            let _ = EnumWindows(
+                Some(enum_shell_callback),
+                LPARAM(&mut result_hwnd as *mut _ as isize),
+            );
+
+            if result_hwnd.is_some() {
+                let _ = SetParent(hwnd, result_hwnd.unwrap());
+                return;
+            }
+
+            let _ = SendMessageTimeoutW(
+                progman,
+                0x052C,
+                WPARAM(0),
+                LPARAM(0),
+                SMTO_NORMAL,
+                1000,
+                None,
+            );
+
+            let mut workerw: Option<HWND> = None;
+            let _ = EnumWindows(
+                Some(enum_workerw_callback),
+                LPARAM(&mut workerw as *mut _ as isize),
+            );
+
+            if let Some(parent) = workerw {
+                let _ = SetParent(hwnd, parent);
+            }
+        }
+    }
+}
+
+#[cfg(target_os = "windows")]
+unsafe extern "system" fn enum_shell_callback(hwnd: windows::Win32::Foundation::HWND, lparam: windows::Win32::Foundation::LPARAM) -> windows::Win32::Foundation::BOOL {
+    use windows::Win32::UI::WindowsAndMessaging::*;
+    use windows::Win32::Foundation::*;
+
+    let wflags = GetWindowLongPtrW(hwnd, GWL_STYLE);
+    if (wflags & WS_VISIBLE.0 as isize) == 0 {
+        return BOOL(1);
+    }
+
+    if let Ok(shell_dll) = FindWindowExW(hwnd, None, windows::core::w!("SHELLDLL_DefView"), None) {
+        if !shell_dll.is_invalid() {
+            if let Ok(list_view) = FindWindowExW(shell_dll, None, windows::core::w!("SysListView32"), windows::core::w!("FolderView")) {
+                if !list_view.is_invalid() {
+                    let result = &mut *(lparam.0 as *mut Option<HWND>);
+                    *result = Some(list_view);
+                    return BOOL(0);
+                }
+            }
+        }
+    }
+
+    BOOL(1)
+}
+
+#[cfg(target_os = "windows")]
+unsafe extern "system" fn enum_workerw_callback(hwnd: windows::Win32::Foundation::HWND, lparam: windows::Win32::Foundation::LPARAM) -> windows::Win32::Foundation::BOOL {
+    use windows::Win32::UI::WindowsAndMessaging::*;
+    use windows::Win32::Foundation::*;
+
+    if let Ok(shell_dll) = FindWindowExW(hwnd, None, windows::core::w!("SHELLDLL_DefView"), None) {
+        if !shell_dll.is_invalid() {
+            let result = &mut *(lparam.0 as *mut Option<HWND>);
+            *result = Some(hwnd);
+            return BOOL(0);
+        }
+    }
+
+    BOOL(1)
+}
+
 #[tauri::command]
 fn toggle_autostart(app: tauri::AppHandle, enabled: bool) -> Result<String, String> {
     let manager = app.autolaunch();
@@ -70,7 +161,6 @@ fn main() {
             }
         }))
         .setup(|app| {
-            // Build tray
             let _tray = TrayIconBuilder::new()
                 .icon(app.default_window_icon().unwrap().clone())
                 .tooltip("TodoList Widget")
@@ -100,7 +190,6 @@ fn main() {
                 })
                 .build(app)?;
 
-            // Register global shortcut Cmd+Shift+T
             let shortcut = Shortcut::new(Some(Modifiers::SUPER | Modifiers::SHIFT), Code::KeyT);
             let global_shortcut = app.global_shortcut();
             let _ = global_shortcut.on_shortcut(shortcut, |app: &tauri::AppHandle, _shortcut, event| {
@@ -119,18 +208,9 @@ fn main() {
             if let Some(window) = app.get_webview_window("main") {
                 #[cfg(target_os = "windows")]
                 {
-                    use windows::Win32::UI::WindowsAndMessaging::*;
-                    use windows::Win32::Foundation::*;
+                    use windows::Win32::Foundation::HWND;
                     if let Ok(hwnd) = window.hwnd() {
-                        let hwnd = HWND(hwnd.0);
-                        unsafe {
-                            let ex_style = GetWindowLongPtrW(hwnd, GWL_EXSTYLE);
-                            SetWindowLongPtrW(
-                                hwnd,
-                                GWL_EXSTYLE,
-                                ex_style | (WS_EX_TOOLWINDOW.0 as isize) | (WS_EX_LAYERED.0 as isize),
-                            );
-                        }
+                        embed_into_desktop(HWND(hwnd.0));
                     }
                 }
             }
