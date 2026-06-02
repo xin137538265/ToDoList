@@ -57,18 +57,6 @@ fn embed_into_desktop(hwnd: windows::Win32::Foundation::HWND) {
 
         let progman = FindWindowW(windows::core::w!("Progman"), None);
         if let Ok(progman) = progman {
-            let mut result_hwnd: Option<HWND> = None;
-
-            let _ = EnumWindows(
-                Some(enum_shell_callback),
-                LPARAM(&mut result_hwnd as *mut _ as isize),
-            );
-
-            if result_hwnd.is_some() {
-                let _ = SetParent(hwnd, result_hwnd.unwrap());
-                return;
-            }
-
             let _ = SendMessageTimeoutW(
                 progman,
                 0x052C,
@@ -79,13 +67,21 @@ fn embed_into_desktop(hwnd: windows::Win32::Foundation::HWND) {
                 None,
             );
 
-            let mut workerw: Option<HWND> = None;
+            let mut shell_workerw: Option<HWND> = None;
             let _ = EnumWindows(
-                Some(enum_workerw_callback),
-                LPARAM(&mut workerw as *mut _ as isize),
+                Some(enum_shell_workerw_callback),
+                LPARAM(&mut shell_workerw as *mut _ as isize),
             );
 
-            if let Some(parent) = workerw {
+            let mut top_workerw: Option<HWND> = None;
+            let _ = EnumWindows(
+                Some(enum_top_workerw_callback),
+                LPARAM(&mut top_workerw as *mut _ as isize),
+            );
+
+            if let Some(parent) = top_workerw {
+                let _ = SetParent(hwnd, parent);
+            } else if let Some(parent) = shell_workerw {
                 let _ = SetParent(hwnd, parent);
             }
         }
@@ -93,24 +89,15 @@ fn embed_into_desktop(hwnd: windows::Win32::Foundation::HWND) {
 }
 
 #[cfg(target_os = "windows")]
-unsafe extern "system" fn enum_shell_callback(hwnd: windows::Win32::Foundation::HWND, lparam: windows::Win32::Foundation::LPARAM) -> windows::Win32::Foundation::BOOL {
+unsafe extern "system" fn enum_shell_workerw_callback(hwnd: windows::Win32::Foundation::HWND, lparam: windows::Win32::Foundation::LPARAM) -> windows::Win32::Foundation::BOOL {
     use windows::Win32::UI::WindowsAndMessaging::*;
     use windows::Win32::Foundation::*;
 
-    let wflags = GetWindowLongPtrW(hwnd, GWL_STYLE);
-    if (wflags & WS_VISIBLE.0 as isize) == 0 {
-        return BOOL(1);
-    }
-
     if let Ok(shell_dll) = FindWindowExW(hwnd, None, windows::core::w!("SHELLDLL_DefView"), None) {
         if !shell_dll.is_invalid() {
-            if let Ok(list_view) = FindWindowExW(shell_dll, None, windows::core::w!("SysListView32"), windows::core::w!("FolderView")) {
-                if !list_view.is_invalid() {
-                    let result = &mut *(lparam.0 as *mut Option<HWND>);
-                    *result = Some(list_view);
-                    return BOOL(0);
-                }
-            }
+            let result = &mut *(lparam.0 as *mut Option<HWND>);
+            *result = Some(hwnd);
+            return BOOL(0);
         }
     }
 
@@ -118,12 +105,26 @@ unsafe extern "system" fn enum_shell_callback(hwnd: windows::Win32::Foundation::
 }
 
 #[cfg(target_os = "windows")]
-unsafe extern "system" fn enum_workerw_callback(hwnd: windows::Win32::Foundation::HWND, lparam: windows::Win32::Foundation::LPARAM) -> windows::Win32::Foundation::BOOL {
+unsafe extern "system" fn enum_top_workerw_callback(hwnd: windows::Win32::Foundation::HWND, lparam: windows::Win32::Foundation::LPARAM) -> windows::Win32::Foundation::BOOL {
     use windows::Win32::UI::WindowsAndMessaging::*;
     use windows::Win32::Foundation::*;
 
+    let p = GetWindowLongPtrW(hwnd, GWL_STYLE);
+    if (p & WS_VISIBLE.0 as isize) == 0 {
+        return BOOL(1);
+    }
+
     if let Ok(shell_dll) = FindWindowExW(hwnd, None, windows::core::w!("SHELLDLL_DefView"), None) {
         if !shell_dll.is_invalid() {
+            return BOOL(1);
+        }
+    }
+
+    let mut class_name = [0u16; 256];
+    let len = GetClassNameW(hwnd, &mut class_name) as usize;
+    if len > 0 {
+        let name_str = String::from_utf16_lossy(&class_name[..len]);
+        if name_str == "WorkerW" {
             let result = &mut *(lparam.0 as *mut Option<HWND>);
             *result = Some(hwnd);
             return BOOL(0);
